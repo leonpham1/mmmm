@@ -1,0 +1,7 @@
+﻿services:
+  mmmm.api:
+    image: mmmm.api
+    build:
+      context: .
+      dockerfile: src/Mmmm.Api/Dockerfile
+
