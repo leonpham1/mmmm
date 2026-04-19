@@ -1,6 +1,0 @@
-<Solution>
-  <Folder Name="/Solution Items/">
-    <File Path="compose.yaml" />
-  </Folder>
-  <Project Path="src\Mmmm.Api\Mmmm.Api.csproj" Type="Classic C#" />
-</Solution>
