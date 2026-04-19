@@ -1,0 +1,30 @@
+name: Run Pytest
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true # Tự động cache các thư viện để lần chạy sau nhanh hơn
+
+    - name: Set up Python
+      run: uv python install 3.14
+
+    - name: Install dependencies
+      # Lệnh này sẽ cài đặt dựa trên uv.lock để đảm bảo môi trường CI giống hệt máy bạn
+      run: uv sync --all-extras --dev
+
+    - name: Run pytest
+      run: uv run pytest
