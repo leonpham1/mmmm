@@ -14,6 +14,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
     - name: Checkout code
@@ -32,4 +33,4 @@ jobs:
       run: uv sync --locked --all-extras --dev
 
     - name: Run pytest
-      run: uv run --with pytest pytest
+      run: uv run pytest
