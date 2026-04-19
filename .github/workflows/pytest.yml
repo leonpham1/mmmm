@@ -2,11 +2,12 @@ name: Run Pytest
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
-# Hạn chế quyền hạn của Token để bảo mật chuẩn Enterprise
 permissions:
   contents: read
 
@@ -16,12 +17,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      # Sử dụng SHA thay vì @v4 để tránh bị tấn công chuỗi cung ứng
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       
     - name: Install uv
-      # Sử dụng SHA thay vì @v5
-      uses: astral-sh/setup-uv@883057195972652940f28d79fcb4cb6748b939ef # v5.2.2
+      uses: astral-sh/setup-uv@f986551839d50c774400a44276711802967f897f # v5.2.2
       with:
         enable-cache: true
 
@@ -29,8 +28,8 @@ jobs:
       run: uv python install 3.14
 
     - name: Install dependencies
+      # Cursor dặn rất đúng: luôn dùng --locked để đồng bộ máy local và CI
       run: uv sync --locked --all-extras --dev
 
     - name: Run pytest
-      # Dùng --with pytest để đảm bảo luôn có pytest dù bạn quên khai báo
       run: uv run --with pytest pytest
