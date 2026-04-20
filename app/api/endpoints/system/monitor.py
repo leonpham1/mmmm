@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 # from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
 from app.core.config import system_settings
 
