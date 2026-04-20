@@ -4,8 +4,7 @@ from app.core.config import system_settings
 
 router = APIRouter()
 
-
-@router.get("/health", tags=["System Monitoring"])
+@router.get("/health")
 async def liveness_probe():
     """
     Liveness Check:
@@ -14,11 +13,10 @@ async def liveness_probe():
     """
     return {
         "status": "healthy",
-        "app_name": system_settings.PROJECT_NAME,
-        "version": system_settings.VERSION
+        "app_name": system_settings.PROJECT_NAME
     }
 
-@router.get("/ready", tags=["System"])
+@router.get("/ready")
 async def readiness_probe():
     """
     Readiness Check:
