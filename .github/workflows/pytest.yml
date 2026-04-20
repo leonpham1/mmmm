@@ -29,8 +29,11 @@ jobs:
       run: uv python install 3.14
 
     - name: Install dependencies
-      # Cursor dặn rất đúng: luôn dùng --locked để đồng bộ máy local và CI
+      # Luôn dùng --locked để đồng bộ máy local và CI
       run: uv sync --locked --all-extras --dev
+
+    - name: Run ruff
+      run: uv run ruff check .
 
     - name: Run pytest
       run: uv run pytest

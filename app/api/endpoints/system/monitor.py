@@ -1,11 +1,10 @@
 from fastapi import APIRouter, HTTPException
-# from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
+from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
 from app.core.config import system_settings
 
 router = APIRouter()
 
-
-@router.get("/health", tags=["System Monitoring"])
+@router.get("/health")
 async def liveness_probe():
     """
     Liveness Check:
@@ -14,11 +13,10 @@ async def liveness_probe():
     """
     return {
         "status": "healthy",
-        "app_name": system_settings.PROJECT_NAME,
-        "version": system_settings.VERSION
+        "app_name": system_settings.PROJECT_NAME
     }
 
-@router.get("/ready", tags=["System"])
+@router.get("/ready")
 async def readiness_probe():
     """
     Readiness Check:
@@ -26,8 +24,9 @@ async def readiness_probe():
     Checks external dependencies like Database, AI Services, or Cache.
     If this fails, traffic will be diverted away from this instance.
     """
-    # try:
-    #     #await db.execute("SELECT 1")
-    #     return {"status": "ready"}
-    # catch Exception as ex:
-    #     raise HTTPException(status_code=HTTP_503_SERVICE_UNAVAILABLE, detail="")
+    try:
+        # Placeholder for dependency checks (e.g., database, cache, external services)
+        # Example: await db.execute("SELECT 1")
+        return {"status": "ready"}
+    except Exception as ex:
+        raise HTTPException(status_code=HTTP_503_SERVICE_UNAVAILABLE, detail=str(ex))
