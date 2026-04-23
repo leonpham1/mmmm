@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from app.api.deps import verify_zalo_webhook_signature
+from app.api.deps.zalo_webhook_deps import verify_zalo_webhook_signature
 
 zalo_webhook_router = APIRouter(prefix="/zalo")
 

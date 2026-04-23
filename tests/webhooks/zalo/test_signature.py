@@ -1,6 +1,6 @@
 import hashlib
 
-from app.api.deps import build_zalo_webhook_signature_content
+from app.api.deps.zalo_webhook_deps import build_zalo_webhook_signature_content
 from tests.webhooks.zalo.conftest import (
     client,
     make_payload,

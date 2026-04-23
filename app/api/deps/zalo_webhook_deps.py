@@ -1,7 +1,8 @@
-import json
-from fastapi import Header, Request, HTTPException
-import hmac
 import hashlib
+import hmac
+import json
+
+from fastapi import Header, HTTPException, Request
 
 from app.core.config import settings
 
@@ -9,10 +10,24 @@ from app.core.config import settings
 def build_zalo_webhook_signature_content(data: dict) -> str:
     """
     Build the string Zalo hashes for x-zevent-signature (before + secret key).
-
     Spec: sort top-level field names A–Z, append each field's value in that
     order; object/array/null values use compact JSON; primitives follow JS
     string coercion (booleans lower-case, numbers as JSON numbers).
+    
+    **Example 1 — key order and nested object**
+
+        data = {
+            "timestamp": "99",
+            "app_id": "111",
+            "nested": {"k": 1},
+        }
+        # Sorted keys: app_id, nested, timestamp
+        # Values joined: "111" + '{"k":1}' + "99"  →  '111{"k":1}99'
+
+    **Example 2 — string, bool, number**
+
+        {"z": 3, "a": "hi", "b": True}
+        # Sorted keys: a, b, z  →  "hi" + "true" + "3"  →  "hitrue3"
     """
     parts: list[str] = []
     for key in sorted(data.keys()):
@@ -45,41 +60,31 @@ async def verify_zalo_webhook_signature(
         ),
     ),
 ) -> None:
-    """
-    Verify Zalo OA webhook signature.
-    """
-    # 1. read raw body → parse to dict
-    # raw_body retains the original bytes to ensure integrity during hashing.
+    """Verify Zalo OA webhook signature (x-zevent-signature)."""
     raw_body: bytes = await request.body()
 
-    if not raw_body.strip():
-        raise HTTPException(status_code=422, detail="Request body is required")
-    
     try:
-        body: dict = json.loads(raw_body)
+        body = json.loads(raw_body)
     except json.JSONDecodeError:
         raise HTTPException(status_code=422, detail="Invalid JSON body") from None
-    
-    if not isinstance(body, dict):
-        raise HTTPException(status_code=422, detail="JSON body must be an object")
-    
+
     try:
-        body["app_id"]
-        body["timestamp"]
-    except KeyError as exc:
-        missing = exc.args[0]
+        _ = body["app_id"], body["timestamp"]
+    except (KeyError, TypeError) as exc:
+        if isinstance(exc, KeyError):
+            raise HTTPException(
+                status_code=422,
+                detail=f"Missing required field: {exc.args[0]}",
+            ) from None
         raise HTTPException(
-            status_code=422, detail=f"Missing required field: {missing}"
+            status_code=422, detail="JSON body must be an object"
         ) from None
 
-    # 2. Zalo: sorted keys (A–Z) → concatenate values → + secret → sha256 hex
     message = (
         build_zalo_webhook_signature_content(body) + settings.ZALO_OA_SECRET_KEY
     )
     digest = hashlib.sha256(message.encode("utf-8")).hexdigest()
 
-    # reject if signature mismatch
-    # use compare_digest instead of == to prevent timing attack
     if not hmac.compare_digest(x_zevent_signature, digest):
         raise HTTPException(
             status_code=403, detail="Zalo webhook signature verification failed"
