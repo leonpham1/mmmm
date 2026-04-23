@@ -4,6 +4,7 @@ from app.api.deps import verify_zalo_webhook_signature
 zalo_webhook_router = APIRouter(prefix="/zalo")
 
 @zalo_webhook_router.post(
+    path="",
     dependencies=[Depends(verify_zalo_webhook_signature)],
     status_code=200
 )
