@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
-from app.core.config import system_settings
+from app.core.config import settings
 
-router = APIRouter()
+system_router = APIRouter(prefix="/system")
 
-@router.get("/health")
+@system_router.get("/health")
 async def liveness_probe():
     """
     Liveness Check:
@@ -13,10 +13,10 @@ async def liveness_probe():
     """
     return {
         "status": "healthy",
-        "app_name": system_settings.PROJECT_NAME
+        "app_name": settings.PROJECT_NAME
     }
 
-@router.get("/ready")
+@system_router.get("/ready")
 async def readiness_probe():
     """
     Readiness Check:
