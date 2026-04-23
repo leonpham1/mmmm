@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch
 
 import app.api.deps as api_deps
+from app.api.deps import build_zalo_webhook_signature_content
 from app.main import app
 
 FAKE_SECRET_KEY = "test_secret_key"
@@ -30,10 +31,9 @@ def make_payload(event_name: str, extra: dict = {}) -> dict:
     return {**base, **extra}
 
 def make_signature(payload: dict) -> str:
-    raw = json.dumps(payload, separators=(",", ":"))
-    # digest = sha256(app_id + raw_body + timestamp + secret_key)
-    message = payload["app_id"] + raw + payload["timestamp"] + FAKE_SECRET_KEY
-    return hashlib.sha256(message.encode()).hexdigest()
+    content = build_zalo_webhook_signature_content(payload)
+    message = content + FAKE_SECRET_KEY
+    return hashlib.sha256(message.encode("utf-8")).hexdigest()
 
 def post_webhook(payload: dict, signature: str):
     return client.post(

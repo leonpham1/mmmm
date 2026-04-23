@@ -1,13 +1,12 @@
 import hashlib
-import json
 
+from app.api.deps import build_zalo_webhook_signature_content
 from tests.webhooks.zalo.conftest import (
     client,
     make_payload,
     make_signature,
     post_webhook,
     WEBHOOK_URL,
-    FAKE_SECRET_KEY,
 )
 
 class TestHackerAttacks:
@@ -45,9 +44,9 @@ class TestHackerAttacks:
 
     def test_signature_from_different_secret_returns_403(self):
         payload = make_payload("user_send_text", {"message": {"text": "Hello"}})
-        raw = json.dumps(payload, separators=(",", ":"))
+        content = build_zalo_webhook_signature_content(payload)
         wrong_sig = hashlib.sha256(
-            (payload["app_id"] + raw + payload["timestamp"] + "wrong_secret").encode()
+            (content + "wrong_secret").encode("utf-8")
         ).hexdigest()
         response = post_webhook(payload, wrong_sig)
         assert response.status_code == 403
