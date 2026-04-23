@@ -5,16 +5,17 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 
+import app.api.deps as api_deps
 from app.main import app
 
 FAKE_SECRET_KEY = "test_secret_key"
-WEBHOOK_URL = "/webhooks/zalo"
+WEBHOOK_URL = "/api/webhooks/zalo"
 
 client = TestClient(app, raise_server_exceptions=False)
 
 @pytest.fixture(autouse=True)
 def mock_secret_key():
-    with patch("app.dependencies.zalo.settings.ZALO_OA_SECRET_KEY", FAKE_SECRET_KEY):
+    with patch.object(api_deps.settings, "ZALO_OA_SECRET_KEY", FAKE_SECRET_KEY):
         yield
 
 def make_payload(event_name: str, extra: dict = {}) -> dict:

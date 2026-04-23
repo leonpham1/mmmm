@@ -25,14 +25,33 @@ async def verify_zalo_webhook_signature(
     # 1. read raw body → parse to dict
     # raw_body retains the original bytes to ensure integrity during hashing.
     raw_body: bytes = await request.body()
-    body: dict = json.loads(raw_body)
+
+    if not raw_body.strip():
+        raise HTTPException(status_code=422, detail="Request body is required")
+    
+    try:
+        body: dict = json.loads(raw_body)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=422, detail="Invalid JSON body") from None
+    
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=422, detail="JSON body must be an object")
+    
+    try:
+        app_id = body["app_id"]
+        timestamp = body["timestamp"]
+    except KeyError as exc:
+        missing = exc.args[0]
+        raise HTTPException(
+            status_code=422, detail=f"Missing required field: {missing}"
+        ) from None
 
     # 2. sha256(x_zevent_signature = app_id + raw_body + timestamp + secret_key)
     # in cryptography, Input is message
     message = (
-        f"{body['app_id']}"
-        f"{raw_body.decode("utf-8")}"
-        f"{body['timestamp']}"
+        f"{app_id}"
+        f"{raw_body.decode('utf-8')}"
+        f"{timestamp}"
         f"{settings.ZALO_OA_SECRET_KEY}"
     )
     # output is digest
