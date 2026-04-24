@@ -1,6 +1,6 @@
 import hashlib
 
-from app.api.deps.zalo_webhook_deps import build_zalo_webhook_signature_content
+from app.api.deps.webhooks.zalo_webhook_deps import build_zalo_webhook_signature_content
 from tests.webhooks.zalo.conftest import (
     client,
     make_payload,
@@ -33,7 +33,7 @@ class TestHackerAttacks:
     def test_tampered_body_content_returns_403(self):
         payload = make_payload("user_send_text", {"message": {"text": "Hello"}})
         signature = make_signature(payload)
-        payload["user_id"] = "hacked_user_id"
+        payload["message"]["text"] = "hacked"
         response = post_webhook(payload, signature)
         assert response.status_code == 403
 

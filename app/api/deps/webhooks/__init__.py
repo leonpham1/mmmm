@@ -1,6 +1,4 @@
-"""API dependencies; submodules group deps by integration (e.g. Zalo)."""
-
-from app.core.config import settings
+"""Webhook-related API dependencies (e.g. Zalo OA signature verification)."""
 
 from app.api.deps.webhooks.zalo_webhook_deps import (
     build_zalo_webhook_signature_content,
@@ -9,6 +7,5 @@ from app.api.deps.webhooks.zalo_webhook_deps import (
 
 __all__ = [
     "build_zalo_webhook_signature_content",
-    "settings",
     "verify_zalo_webhook_signature",
 ]

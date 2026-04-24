@@ -10,24 +10,34 @@ from app.core.config import settings
 def build_zalo_webhook_signature_content(data: dict) -> str:
     """
     Build the string Zalo hashes for x-zevent-signature (before + secret key).
+
     Spec: sort top-level field names A–Z, append each field's value in that
     order; object/array/null values use compact JSON; primitives follow JS
     string coercion (booleans lower-case, numbers as JSON numbers).
-    
-    **Example 1 — key order and nested object**
 
-        data = {
-            "timestamp": "99",
-            "app_id": "111",
-            "nested": {"k": 1},
+    **Example (realistic Zalo ``user_send_text`` body)**
+
+    Payload (order in JSON does not matter; only sorted keys matter for signing)::
+
+        {
+            "app_id": "360846524940903967",
+            "sender": {"id": "246845883529197922"},
+            "user_id_by_app": "552177279717587730",
+            "recipient": {"id": "388613280878808645"},
+            "event_name": "user_send_text",
+            "message": {
+                "text": "message",
+                "msg_id": "96d3cdf3af150460909"
+            },
+            "timestamp": "154390853474"
         }
-        # Sorted keys: app_id, nested, timestamp
-        # Values joined: "111" + '{"k":1}' + "99"  →  '111{"k":1}99'
 
-    **Example 2 — string, bool, number**
+    Sorted top-level keys: ``app_id``, ``event_name``, ``message``, ``recipient``,
+    ``sender``, ``timestamp``, ``user_id_by_app``.
 
-        {"z": 3, "a": "hi", "b": True}
-        # Sorted keys: a, b, z  →  "hi" + "true" + "3"  →  "hitrue3"
+    Joined ``content`` (then append OA secret and ``sha256`` hex)::
+
+        360846524940903967user_send_text{"text":"message","msg_id":"96d3cdf3af150460909"}{"id":"388613280878808645"}{"id":"246845883529197922"}154390853474552177279717587730
     """
     parts: list[str] = []
     for key in sorted(data.keys()):
@@ -65,7 +75,7 @@ async def verify_zalo_webhook_signature(
 
     try:
         body = json.loads(raw_body)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, UnicodeDecodeError):
         raise HTTPException(status_code=422, detail="Invalid JSON body") from None
 
     try:

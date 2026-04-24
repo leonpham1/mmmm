@@ -1,12 +1,20 @@
 from __future__ import annotations
+
 from typing import Annotated, Literal, Union
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
+
+
+class ZaloModel(BaseModel):
+    """Base for Zalo webhook DTOs: reject unknown fields at parse time."""
+
+    model_config = ConfigDict(extra="forbid")
 
 
 # ---------------------------------------------------------------------------
 # Base event
 # ---------------------------------------------------------------------------
-class ZaloBaseEvent(BaseModel):
+class ZaloBaseEvent(ZaloModel):
     app_id: str
     timestamp: int  # milliseconds epoch
 
@@ -14,34 +22,34 @@ class ZaloBaseEvent(BaseModel):
 # ---------------------------------------------------------------------------
 # Shared sub-models
 # ---------------------------------------------------------------------------
-class ZaloSender(BaseModel):
+class ZaloSender(ZaloModel):
     id: str  # user id
 
 
-class ZaloRecipient(BaseModel):
+class ZaloRecipient(ZaloModel):
     id: str  # oa id
 
 
 # ---------------------------------------------------------------------------
 # Message payload variants
 # ---------------------------------------------------------------------------
-class ZaloTextMessage(BaseModel):
+class ZaloTextMessage(ZaloModel):
     msg_id: str
     text: str
 
 
-class ZaloAttachmentPayloadImage(BaseModel):
+class ZaloAttachmentPayloadImage(ZaloModel):
     url: str
     thumbnail: str | None = None
     description: str | None = None
 
 
-class ZaloCoordinates(BaseModel):
+class ZaloCoordinates(ZaloModel):
     latitude: float
     longitude: float
 
 
-class ZaloAttachmentPayloadLocation(BaseModel):
+class ZaloAttachmentPayloadLocation(ZaloModel):
     coordinates: ZaloCoordinates
     address: str | None = None
     name: str | None = None
@@ -50,12 +58,12 @@ class ZaloAttachmentPayloadLocation(BaseModel):
 # ---------------------------------------------------------------------------
 # Attachment wrappers
 # ---------------------------------------------------------------------------
-class ZaloImageMessage(BaseModel):
+class ZaloImageMessage(ZaloModel):
     msg_id: str
     attachments: list[ZaloAttachmentPayloadImage]
 
 
-class ZaloLocationMessage(BaseModel):
+class ZaloLocationMessage(ZaloModel):
     msg_id: str
     attachments: list[ZaloAttachmentPayloadLocation]
 
@@ -91,3 +99,10 @@ ZaloWebhookPayload = Annotated[
     Union[ZaloUserSendTextEvent, ZaloUserSendImageEvent, ZaloUserSendLocationEvent],
     Field(discriminator="event_name"),
 ]
+
+zalo_webhook_payload_adapter = TypeAdapter(ZaloWebhookPayload)
+
+
+def parse_zalo_webhook_payload(data: object) -> ZaloUserSendTextEvent | ZaloUserSendImageEvent | ZaloUserSendLocationEvent:
+    """Validate a decoded JSON body as ``ZaloWebhookPayload`` (discriminated union)."""
+    return zalo_webhook_payload_adapter.validate_python(data)
