@@ -1,6 +1,7 @@
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import ValidationError
 
 from app.api.deps.webhooks.zalo_webhook_deps import verify_zalo_webhook_signature
@@ -12,22 +13,20 @@ __all__ = ["ZaloWebhookPayload", "handle_zalo_webhook", "zalo_webhook_router"]
 
 zalo_webhook_router = APIRouter(prefix="/zalo")
 
+
 @zalo_webhook_router.post(
     path="/",
-    dependencies=[Depends(verify_zalo_webhook_signature)],
     status_code=200,
 )
-async def handle_zalo_webhook(request: Request) -> dict[str, str]:
+async def handle_zalo_webhook(
+    data: Annotated[dict, Depends(verify_zalo_webhook_signature)],
+) -> dict[str, str]:
     """Handle POST /api/webhooks/zalo after signature verification.
 
-    Body is validated with ``parse_zalo_webhook_payload`` against the
-    ``ZaloWebhookPayload`` discriminated union in ``app.schemas.webhooks.zalo_schema``.
+    ``data`` is the JSON object returned by ``verify_zalo_webhook_signature`` (same
+    bytes used for the signature). It is validated with ``parse_zalo_webhook_payload``
+    against the ``ZaloWebhookPayload`` discriminated union in ``app.schemas.webhooks.zalo_schema``.
     """
-    try:
-        data = await request.json()
-    except Exception:
-        raise HTTPException(status_code=422, detail="Invalid JSON body") from None
-
     try:
         payload = parse_zalo_webhook_payload(data)
     except ValidationError as exc:

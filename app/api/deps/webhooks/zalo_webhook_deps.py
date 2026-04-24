@@ -11,7 +11,7 @@ def build_zalo_webhook_signature_content(data: dict) -> str:
     """
     Build the string Zalo hashes for x-zevent-signature (before + secret key).
 
-    Spec: sort top-level field names A–Z, append each field's value in that
+    Spec: sort top-level field names A-Z, append each field's value in that
     order; object/array/null values use compact JSON; primitives follow JS
     string coercion (booleans lower-case, numbers as JSON numbers).
 
@@ -64,13 +64,13 @@ async def verify_zalo_webhook_signature(
             "Security header used by the Zalo Platform to authenticate and "
             "verify the integrity of webhook notifications. Ensures the data "
             "comes from Zalo and has not been tampered with. "
-            "Per Zalo docs: sort body keys A–Z, concatenate values "
+            "Per Zalo docs: sort body keys A-Z, concatenate values "
             "(JSON.stringify for objects/arrays), then "
             "sha256hex(content + OA secret key)."
         ),
     ),
-) -> None:
-    """Verify Zalo OA webhook signature (x-zevent-signature)."""
+) -> dict:
+    """Verify Zalo OA webhook ``x-zevent-signature`` and return the parsed JSON body."""
     raw_body: bytes = await request.body()
 
     try:
@@ -99,3 +99,4 @@ async def verify_zalo_webhook_signature(
         raise HTTPException(
             status_code=403, detail="Zalo webhook signature verification failed"
         )
+    return body

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated, Literal, Union
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
@@ -96,7 +96,7 @@ class ZaloUserSendLocationEvent(ZaloBaseEvent):
 # Union type + discriminated parsing
 # ---------------------------------------------------------------------------
 ZaloWebhookPayload = Annotated[
-    Union[ZaloUserSendTextEvent, ZaloUserSendImageEvent, ZaloUserSendLocationEvent],
+    ZaloUserSendTextEvent | ZaloUserSendImageEvent | ZaloUserSendLocationEvent,
     Field(discriminator="event_name"),
 ]
 
