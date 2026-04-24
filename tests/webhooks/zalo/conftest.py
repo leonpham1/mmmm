@@ -10,7 +10,7 @@ from app.api.deps.webhooks.zalo_webhook_deps import build_zalo_webhook_signature
 from app.main import app
 
 FAKE_SECRET_KEY = "test_secret_key"
-WEBHOOK_URL = "/api/webhooks/zalo"
+WEBHOOK_URL = "/api/webhooks/zalo/"
 
 client = TestClient(app, raise_server_exceptions=False)
 

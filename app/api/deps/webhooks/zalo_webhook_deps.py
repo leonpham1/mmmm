@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+import time
 
 from fastapi import Header, HTTPException, Request
 
@@ -45,9 +46,7 @@ def build_zalo_webhook_signature_content(data: dict) -> str:
         if isinstance(value, bool):
             parts.append("true" if value else "false")
         elif isinstance(value, (dict, list)) or value is None:
-            parts.append(
-                json.dumps(value, separators=(",", ":"), ensure_ascii=False)
-            )
+            parts.append(json.dumps(value, separators=(",", ":"), ensure_ascii=False))
         elif isinstance(value, (int, float)):
             parts.append(json.dumps(value))
         else:
@@ -90,13 +89,23 @@ async def verify_zalo_webhook_signature(
             status_code=422, detail="JSON body must be an object"
         ) from None
 
-    message = (
-        build_zalo_webhook_signature_content(body) + settings.ZALO_OA_SECRET_KEY
-    )
+    message = build_zalo_webhook_signature_content(body) + settings.ZALO_OA_SECRET_KEY
     digest = hashlib.sha256(message.encode("utf-8")).hexdigest()
 
     if not hmac.compare_digest(x_zevent_signature, digest):
         raise HTTPException(
             status_code=403, detail="Zalo webhook signature verification failed"
         )
+
+    # Prevent replay webhook
+    # The old valid payload and signature can be resent and still pass verification.
+    try:
+        timestamp_ms = int(body["timestamp"])
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=422, detail="Invalid timestamp") from None
+
+    now_ms = int(time.time() * 1000)
+    if abs(now_ms - timestamp_ms) > 5 * 60 * 1000:
+        raise HTTPException(status_code=403, detail="Expired webhook timestamp")
+
     return body

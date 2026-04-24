@@ -9,6 +9,7 @@ from tests.webhooks.zalo.conftest import (
     WEBHOOK_URL,
 )
 
+
 class TestHackerAttacks:
     def test_wrong_signature_returns_403(self):
         payload = make_payload("user_send_text", {"message": {"text": "Hello"}})
@@ -59,6 +60,7 @@ class TestHackerAttacks:
         response = post_webhook(tampered, signature)
         assert response.status_code == 403
 
+
 class TestNaiveUserMistakes:
     def test_missing_signature_header_returns_422(self):
         payload = make_payload("user_send_text")
@@ -77,6 +79,14 @@ class TestNaiveUserMistakes:
         response = client.post(
             WEBHOOK_URL,
             content="not json",
+            headers={"Content-Type": "application/json", "x-zevent-signature": "abc"},
+        )
+        assert response.status_code == 422
+
+    def test_json_array_body_returns_422(self):
+        response = client.post(
+            WEBHOOK_URL,
+            content="[]",
             headers={"Content-Type": "application/json", "x-zevent-signature": "abc"},
         )
         assert response.status_code == 422
