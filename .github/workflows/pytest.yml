@@ -29,11 +29,14 @@ jobs:
       run: uv python install 3.14
 
     - name: Install dependencies
-      # Luôn dùng --locked để đồng bộ máy local và CI
+      # always use --locked to sync local and CI
       run: uv sync --locked --all-extras --dev
 
-    - name: Run ruff
+    - name: Run Ruff
       run: uv run ruff check .
 
     - name: Run pytest
+      env:
+        # Required at import time by app.core.config.Settings (before conftest patches).
+        ZALO_OA_SECRET_KEY: test_secret_key
       run: uv run pytest

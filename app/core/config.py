@@ -1,8 +1,9 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-class SystemSettings(BaseSettings):
-    PROJECT_NAME: str = "mmmm App"
-    
+class Settings(BaseSettings):
+    PROJECT_NAME: str = "MMMM App"
+    ZALO_OA_SECRET_KEY: str
+
     model_config = SettingsConfigDict(env_file=".env")
 
-system_settings = SystemSettings()
+settings = Settings()
